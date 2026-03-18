@@ -1,16 +1,33 @@
-# React + Vite
+# 🗑️ GarbageTracker — AI-Powered Waste Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A real-time garbage bin monitoring system built with React. Track bins, view them on interactive maps, and get AI-powered insights for route optimization.
 
-Currently, two official plugins are available:
+## 🌐 Live Demo
+👉 [Click here to view live app](https://garbage-tracker-final-3y0l7de28-itsswarna09s-projects.vercel.app/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Features
+- 🔐 **User Authentication** — Signup, login, logout
+- 📍 **Garbage Bin Reporting** — Report bins with location and status
+- 🗺️ **Interactive Maps** — View all bins on a real map with color-coded markers
+- 🤖 **AI Analysis** — Get insights, predict overflows, optimize routes
+- 📊 **Analytics Dashboard** — Pie charts and bar charts
+- 🚛 **Route Optimization** — Priority-ordered collection routes
 
-## React Compiler
+## 🛠️ Built With
+- React + Vite
+- Leaflet.js (Interactive Maps)
+- OpenStreetMap (Free geocoding)
+- Recharts (Charts)
+- Claude AI (AI insights)
+- Vercel (Deployment)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 How to Run Locally
+```bash
+git clone https://github.com/itsswarna09/garbage-tracker-final.git
+cd garbage-tracker-final
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 👩‍💻 Built By
+Swarna Jyothi S — [@itsswarna09](https://github.com/itsswarna09)
