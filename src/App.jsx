@@ -2,8 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   Trash2, MapPin, Zap, CheckCircle, ArrowRight,
   Mail, Lock, User, LogOut, Plus, Trash,
-  Clock, AlertCircle,
+  Clock, AlertCircle, BarChart2,
 } from 'lucide-react';
+import {
+  PieChart, Pie, Cell, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Legend,
+} from 'recharts';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('landing');
@@ -50,7 +55,6 @@ export default function App() {
   const analyzeWithAI = async (type) => {
     setAiLoading(true);
     setAiResult('');
-
     const fullBins = userReports.filter(r => r.status === 'full').length;
     const moderateBins = userReports.filter(r => r.status === 'moderate').length;
     const emptyBins = userReports.filter(r => r.status === 'empty').length;
@@ -60,7 +64,6 @@ export default function App() {
     await new Promise(r => setTimeout(r, 1500));
 
     let result = '';
-
     if (type === 'insights') {
       result = `📊 AI INSIGHTS FOR YOUR GARBAGE DATA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -75,7 +78,6 @@ export default function App() {
    ${emptyBins} bins (${total > 0 ? Math.round((emptyBins/total)*100) : 0}%) are empty and in good condition. Overall status: ${total > 0 ? (emptyBins > fullBins ? 'GOOD 🟢' : 'NEEDS IMPROVEMENT 🟡') : 'NO DATA YET'}.
 
 💡 RECOMMENDATION: Focus collection efforts on full bins first, then schedule moderate bins for tomorrow morning.`;
-
     } else if (type === 'predict') {
       result = `🔮 OVERFLOW PREDICTION REPORT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -94,7 +96,6 @@ ${fullBins > 0 ? `• ${cities.split(',')[0] || 'Reported locations'} — Will o
 
 📊 PREDICTED OVERFLOW RISK:
 ${fullBins >= 3 ? '🔴 HIGH — Immediate action required!' : fullBins >= 1 ? '🟡 MEDIUM — Collection needed today' : '🟢 LOW — Situation under control'}`;
-
     } else if (type === 'route') {
       const locationList = userReports
         .sort((a, b) => {
@@ -103,7 +104,6 @@ ${fullBins >= 3 ? '🔴 HIGH — Immediate action required!' : fullBins >= 1 ? '
         })
         .map((r, i) => `   Stop ${i+1}: ${r.location} — ${r.status === 'full' ? '🔴 URGENT' : r.status === 'moderate' ? '🟡 MODERATE' : '🟢 ROUTINE'}`)
         .join('\n');
-
       result = `🗺️ OPTIMIZED COLLECTION ROUTE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -120,9 +120,8 @@ ${locationList || '   No bins reported yet — add some reports first!'}
 - Optimized route saves ~30% fuel vs random collection
 - Prioritizing full bins reduces overflow risk by 80%
 
-✅ START with full bins, then moderate, then empty for maximum efficiency!`;
+✅ START with full bins, then moderate, then empty!`;
     }
-
     setAiResult(result);
     setAiLoading(false);
   };
@@ -194,6 +193,20 @@ ${locationList || '   No bins reported yet — add some reports first!'}
     moderate: userReports.filter((r) => r.status === 'moderate').length,
     empty: userReports.filter((r) => r.status === 'empty').length,
   };
+
+  // Chart Data
+  const pieData = [
+    { name: 'Full', value: stats.full, color: '#EF4444' },
+    { name: 'Moderate', value: stats.moderate, color: '#F59E0B' },
+    { name: 'Empty', value: stats.empty, color: '#10B981' },
+  ].filter(d => d.value > 0);
+
+  const cityMap = {};
+  userReports.forEach(r => {
+    const city = r.location || 'Unknown';
+    cityMap[city] = (cityMap[city] || 0) + 1;
+  });
+  const barData = Object.entries(cityMap).map(([city, count]) => ({ city, count }));
 
   const LandingPage = () => (
     <div style={{ backgroundColor: '#FFFFFF' }}>
@@ -599,6 +612,168 @@ ${locationList || '   No bins reported yet — add some reports first!'}
     );
   };
 
+  // ─── ANALYTICS VIEW ──────────────────────────────────────────────
+  const AnalyticsView = () => {
+    if (userReports.length === 0) {
+      return (
+        <div style={{
+          backgroundColor: '#FFFFFF', padding: '48px 32px',
+          borderRadius: '12px', textAlign: 'center',
+          color: '#4B5563', border: '2px dashed #E5E7EB',
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
+          <p style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>No data to analyze yet</p>
+          <p>Add some bin reports first to see charts!</p>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}>
+          📈 Analytics Dashboard
+        </h2>
+        <p style={{ color: '#4B5563', marginBottom: '24px' }}>Visual breakdown of your garbage tracking data</p>
+
+        {/* Summary Cards */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gap: '16px', marginBottom: '32px',
+        }}>
+          {[
+            { label: 'Total Reports', value: stats.total, color: '#3B82F6', bg: '#EFF6FF', icon: '📋' },
+            { label: 'Full Bins', value: stats.full, color: '#EF4444', bg: '#FEF2F2', icon: '🔴' },
+            { label: 'Moderate', value: stats.moderate, color: '#F59E0B', bg: '#FFFBEB', icon: '🟡' },
+            { label: 'Empty', value: stats.empty, color: '#10B981', bg: '#F0FDF4', icon: '🟢' },
+            { label: 'Cities', value: Object.keys(cityMap).length, color: '#8B5CF6', bg: '#F5F3FF', icon: '🏙️' },
+          ].map((card) => (
+            <div key={card.label} style={{
+              backgroundColor: card.bg, padding: '20px',
+              borderRadius: '12px', textAlign: 'center',
+              border: `1px solid ${card.color}22`,
+            }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>{card.icon}</div>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: card.color }}>{card.value}</div>
+              <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>{card.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Charts Row */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '24px', marginBottom: '32px',
+        }}>
+          {/* Pie Chart */}
+          <div style={{
+            backgroundColor: '#FFFFFF', padding: '24px',
+            borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            border: '1px solid #E5E7EB',
+          }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>
+              🥧 Bin Status Distribution
+            </h3>
+            {pieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%" cy="50%"
+                    outerRadius={90}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p style={{ textAlign: 'center', color: '#9CA3AF' }}>No data yet</p>
+            )}
+          </div>
+
+          {/* Bar Chart */}
+          <div style={{
+            backgroundColor: '#FFFFFF', padding: '24px',
+            borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            border: '1px solid #E5E7EB',
+          }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>
+              📊 Reports by City
+            </h3>
+            {barData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={barData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="city" tick={{ fontSize: 11 }} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#10B981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p style={{ textAlign: 'center', color: '#9CA3AF' }}>No data yet</p>
+            )}
+          </div>
+        </div>
+
+        {/* Priority Table */}
+        <div style={{
+          backgroundColor: '#FFFFFF', padding: '24px',
+          borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          border: '1px solid #E5E7EB',
+        }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>
+            🚛 Collection Priority List
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {userReports
+              .sort((a, b) => {
+                const p = { full: 0, moderate: 1, empty: 2 };
+                return p[a.status] - p[b.status];
+              })
+              .map((report, index) => (
+                <div key={report.id} style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  padding: '12px 16px', borderRadius: '8px',
+                  backgroundColor: report.status === 'full' ? '#FEF2F2'
+                    : report.status === 'moderate' ? '#FFFBEB' : '#F0FDF4',
+                  border: `1px solid ${report.status === 'full' ? '#FECACA'
+                    : report.status === 'moderate' ? '#FDE68A' : '#A7F3D0'}`,
+                }}>
+                  <span style={{
+                    width: '28px', height: '28px', borderRadius: '50%',
+                    backgroundColor: '#E5E7EB', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 'bold', fontSize: '13px', flexShrink: 0,
+                  }}>
+                    {index + 1}
+                  </span>
+                  <span style={{ flex: 1, fontWeight: '500', color: '#111827' }}>
+                    {report.location}
+                  </span>
+                  <span style={{
+                    padding: '4px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: '600',
+                    backgroundColor: report.status === 'full' ? '#EF4444'
+                      : report.status === 'moderate' ? '#F59E0B' : '#10B981',
+                    color: 'white',
+                  }}>
+                    {report.status === 'full' ? '🔴 URGENT'
+                      : report.status === 'moderate' ? '🟡 MODERATE' : '🟢 ROUTINE'}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const DashboardPage = () => (
     <div>
       <nav style={{
@@ -639,11 +814,13 @@ ${locationList || '   No bins reported yet — add some reports first!'}
             <p style={{ fontSize: '12px', color: '#F59E0B', marginTop: '4px' }}>💡 Try: "Mumbai", "Delhi", "Kakinada", "Bengaluru", "Chennai"</p>
           </div>
 
+          {/* Tabs */}
           <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
             {[
               { id: 'list', label: '📋 List View' },
               { id: 'map', label: '🗺️ Map View' },
               { id: 'ai', label: '🤖 AI Analysis' },
+              { id: 'analytics', label: '📊 Analytics' },
             ].map((tab) => (
               <button key={tab.id} onClick={() => setViewMode(tab.id)} style={{
                 backgroundColor: viewMode === tab.id ? '#10B981' : '#E5E7EB',
@@ -719,6 +896,9 @@ ${locationList || '   No bins reported yet — add some reports first!'}
               </div>
             </div>
           )}
+
+          {/* ANALYTICS VIEW */}
+          {viewMode === 'analytics' && <AnalyticsView />}
 
           {/* MAP VIEW */}
           {viewMode === 'map' && (
